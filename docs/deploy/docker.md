@@ -172,7 +172,15 @@ docker compose --env-file .env.local --profile https up -d
 
 Caddy 会自动申请证书并反代到 `app:3000`，请求体上限 17MB（与图片上传限制一致）。域名需先解析到服务器公网 IP，并放行 80/443。
 
-已有 Nginx 时，把 `deploy/nginx-existing.conf` 里的域名与证书换成自己的，`proxy_pass http://127.0.0.1:3000;`，并保持 `Host` 头即可（应用会校验同源）。
+服务器上已有 Nginx 时，不用 Caddy，直接用 `deploy/nginx-existing.conf` 模板（不影响同机其他站点）：
+把文件里的域名和证书路径换成自己的，放到 `/etc/nginx/sites-available/`，软链到 `sites-enabled/`，然后：
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d study.example.com     # 首次签发/续期
+```
+
+三个必须保留的设置：`proxy_set_header Host $host`（应用校验 Origin 与 Host 同源，写死 `127.0.0.1` 会 403）、`client_max_body_size 32m`（12MB 图片转 Base64 后约 16MB）、`proxy_read_timeout 300s`（识别/大模型最长 180s）。
 
 ## 6. 更新与回滚
 
