@@ -1,0 +1,18 @@
+# Deployment files must keep LF: CRLF breaks Dockerfile line continuations
+# and shell scripts when the image is built on Linux.
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+Caddyfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+.dockerignore text eol=lf
+
+# Keep binaries untouched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.mp3 binary
+*.wav binary
+*.ico binary
