@@ -38,6 +38,17 @@ npm run mini:build
 node --env-file=.env.local scripts/check-hybrid.mjs /绝对路径/不规则动词词表.jpg
 ```
 
+## 阿里云百炼（V0.0.1 新增）
+
+对话、图片识别和语音识别都可以改用阿里云百炼（DashScope）的 OpenAI 兼容接口：
+
+- 对话：`qwen-plus`（需支持工具调用）
+- 图片识别：`qwen-vl-ocr-latest`
+- 语音识别：`qwen3-asr-flash`（`input_audio` 方式，音频经 FFmpeg 转 MP3）
+- 手写批改仍使用腾讯手写识别
+
+在「服务与设置 → 阿里云百炼」填写一次 API Key，再把对应分类的服务选为「阿里云百炼」即可。详见 [docs/bailian/README.md](docs/bailian/README.md)。
+
 ## 本机启动
 
 需要 Node.js 22+、Python 3.11+ 和 FFmpeg。当前默认使用 Edge 在线语音，原有 `http://127.0.0.1:8765` 本地 TTS 配置保留，可在听写设置中切换；选择本地时须自行启动已有服务。

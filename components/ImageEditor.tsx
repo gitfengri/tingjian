@@ -34,7 +34,9 @@ export default function ImageEditor({
     [past, setPast] = useState<Picture[][]>([]),
     [future, setFuture] = useState<Picture[][]>([]),
     [contentMode, setContentMode] = useState<ContentMode>("auto"),
-    [provider, setProvider] = useState<"default" | "tencent" | "xfyun">(
+    [provider, setProvider] = useState<
+      "default" | "tencent" | "bailian" | "openai-compatible"
+    >(
       "default",
     );
   const svg = useRef<SVGSVGElement>(null);
@@ -259,7 +261,10 @@ export default function ImageEditor({
           >
             <option value="default">使用网页中配置的默认服务</option>
             <option value="tencent">腾讯高精度 · 保留文字位置</option>
-            <option value="xfyun">兼容接口 · 图片识别模型</option>
+            <option value="bailian">阿里云百炼 · Qwen 视觉模型</option>
+            <option value="openai-compatible">
+              其他兼容接口 · 图片识别模型
+            </option>
           </select>
         </label>
         <p className="note">

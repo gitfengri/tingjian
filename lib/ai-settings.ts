@@ -25,6 +25,12 @@ export const aiSections = [
     description: "图片识别、腾讯语音识别和腾讯手写识别共用这组凭据。",
   },
   {
+    id: "bailian",
+    title: "阿里云百炼",
+    description:
+      "对话、图片识别和语音识别可共用这组百炼配置；各分类选择了“阿里云百炼”时，未单独填写地址、密钥或模型则使用这里的值。",
+  },
+  {
     id: "asr",
     title: "语音识别",
     description: "把麦克风录音转写成文字，再交给听写 Agent 理解。",
@@ -52,20 +58,28 @@ type Field = {
   hint?: string;
 };
 const compatible = [["openai-compatible", "OpenAI 兼容接口"]] as const;
-const cloudOptions = [["tencent", "腾讯云"], ...compatible] as const;
+const cloudOptions = [
+  ["tencent", "腾讯云"],
+  ["bailian", "阿里云百炼（DashScope）"],
+  ...compatible,
+] as const;
+const chatOptions = [
+  ...compatible,
+  ["bailian", "阿里云百炼（DashScope）"],
+] as const;
 export const aiFields = {
   LLM_PROVIDER: {
     section: "llm",
     label: "接口协议",
     kind: "select",
     default: "openai-compatible",
-    options: compatible,
+    options: chatOptions,
   },
   LLM_BASE_URL: {
     section: "llm",
     label: "服务地址（Base URL）",
     kind: "url",
-    hint: "例如 https://token.sensenova.cn/v1，不含 /chat/completions。",
+    hint: "例如 https://token.sensenova.cn/v1，不含 /chat/completions。选择阿里云百炼时改用「阿里云百炼」分组的地址与模型。",
   },
   LLM_MODEL: {
     section: "llm",
@@ -95,7 +109,7 @@ export const aiFields = {
     section: "vision",
     label: "兼容接口地址",
     kind: "url",
-    hint: "使用腾讯识别时，这组兼容接口配置作为备用保留。",
+    hint: "仅“其他兼容接口”使用；选择腾讯或阿里云百炼时忽略本组地址与密钥。",
   },
   VISION_MODEL: { section: "vision", label: "图片识别模型", kind: "text" },
   VISION_API_KEY: {
@@ -171,7 +185,7 @@ export const aiFields = {
     section: "asr",
     label: "兼容接口地址",
     kind: "url",
-    hint: "兼容接口需支持 /audio/transcriptions。",
+    hint: "仅“其他兼容接口”使用，需支持 /audio/transcriptions；选择腾讯或阿里云百炼时忽略。",
   },
   ASR_MODEL: { section: "asr", label: "语音识别模型", kind: "text" },
   ASR_API_KEY: { section: "asr", label: "语音识别 API Key", kind: "secret" },
@@ -197,6 +211,39 @@ export const aiFields = {
     section: "handwriting",
     label: "手写识别 API Key",
     kind: "secret",
+  },
+  BAILIAN_API_KEY: {
+    section: "bailian",
+    label: "百炼 API Key",
+    kind: "secret",
+  },
+  BAILIAN_BASE_URL: {
+    section: "bailian",
+    label: "服务地址（Base URL）",
+    kind: "url",
+    default: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    hint: "北京地域默认地址；使用业务空间专属域名时替换为 https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1。",
+  },
+  BAILIAN_LLM_MODEL: {
+    section: "bailian",
+    label: "百炼对话模型",
+    kind: "text",
+    default: "qwen-plus",
+    hint: "用于清单整理、讲解和听写对话，需支持工具调用，例如 qwen-plus、qwen-max。",
+  },
+  BAILIAN_VISION_MODEL: {
+    section: "bailian",
+    label: "百炼图片识别模型",
+    kind: "text",
+    default: "qwen-vl-ocr-latest",
+    hint: "例如 qwen-vl-ocr-latest、qwen-vl-max-latest；需支持图片输入。",
+  },
+  BAILIAN_ASR_MODEL: {
+    section: "bailian",
+    label: "百炼语音识别模型",
+    kind: "text",
+    default: "qwen3-asr-flash",
+    hint: "使用 OpenAI 兼容 chat/completions 的 input_audio 输入。",
   },
   EDGE_TTS_PYTHON: {
     section: "runtime",
@@ -313,6 +360,17 @@ export function inheritedAIValues(
     result.VISION_PROVIDER =
       result.TENCENT_SECRET_ID && result.TENCENT_SECRET_KEY
         ? "tencent"
-        : "openai-compatible";
+        : result.BAILIAN_API_KEY
+          ? "bailian"
+          : "openai-compatible";
+  const tencentReady = result.TENCENT_SECRET_ID && result.TENCENT_SECRET_KEY;
+  if (!environment.ASR_PROVIDER && result.BAILIAN_API_KEY && !tencentReady)
+    result.ASR_PROVIDER = "bailian";
+  if (
+    !environment.LLM_PROVIDER &&
+    result.BAILIAN_API_KEY &&
+    !result.LLM_BASE_URL
+  )
+    result.LLM_PROVIDER = "bailian";
   return result;
 }

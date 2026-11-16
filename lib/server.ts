@@ -70,7 +70,42 @@ export async function request(
     }
   }
 }
+export const BAILIAN_BASE_URL =
+  "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const bailianModels: Record<string, string> = {
+  LLM: "qwen-plus",
+  VISION: "qwen-vl-ocr-latest",
+  ASR: "qwen3-asr-flash",
+};
+export function bailianConfigured() {
+  return Boolean(
+    getAISetting("BAILIAN_API_KEY") ||
+      getAISetting("VISION_API_KEY") ||
+      getAISetting("LLM_API_KEY") ||
+      getAISetting("ASR_API_KEY"),
+  );
+}
+/**
+ * Bailian uses its own group only. Legacy per-service fields belong to the
+ * previous providers and must never leak into DashScope requests.
+ */
+export function bailianConfig(prefix: string) {
+  const base = getAISetting("BAILIAN_BASE_URL") || BAILIAN_BASE_URL;
+  const key = getAISetting("BAILIAN_API_KEY");
+  const model =
+    getAISetting(`BAILIAN_${prefix}_MODEL`) || bailianModels[prefix] || "";
+  if (!key)
+    throw new ServiceError(
+      503,
+      "阿里云百炼未配置 API Key，请在“服务与设置 → 阿里云百炼”填写",
+    );
+  if (!model)
+    throw new ServiceError(503, `阿里云百炼未配置 ${prefix} 模型名称`);
+  return { base: base.replace(/\/+$/, ""), key, model, provider: "bailian" };
+}
 export function config(prefix: string) {
+  if (getAISetting(`${prefix}_PROVIDER`) === "bailian")
+    return bailianConfig(prefix);
   const base = getAISetting(`${prefix}_BASE_URL`),
     key = getAISetting(`${prefix}_API_KEY`),
     model = getAISetting(`${prefix}_MODEL`);
@@ -87,7 +122,7 @@ export function config(prefix: string) {
       503,
       `${prefix}_PROVIDER 未配置为经过供应商确认的 openai-compatible`,
     );
-  return { base: base.replace(/\/$/, ""), key, model };
+  return { base: base.replace(/\/$/, ""), key, model, provider: "openai-compatible" };
 }
 export async function chat(
   prefix: string,

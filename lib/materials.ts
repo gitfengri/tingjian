@@ -128,9 +128,9 @@ export function buildMaterial(input: {
   if (blocks.some((b) => typeof b.confidence === "number" && b.confidence < 80))
     warnings.push("部分文字的供应商置信度偏低，请对照原图确认。");
   if (!blocks.length) warnings.push("没有识别到文字，请调整选区或重新拍摄。");
-  if (input.provider === "xfyun-text")
+  if (input.provider === "xfyun-text" || input.provider === "bailian-text")
     warnings.push(
-      "当前引擎未返回文字坐标，无法可靠恢复表格列；词表建议使用腾讯版面识别。",
+      "当前识别引擎未返回文字坐标，无法可靠恢复表格列；词表建议使用腾讯版面识别。",
     );
   return {
     id: input.id || recordId(),

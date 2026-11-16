@@ -82,27 +82,26 @@ async function getResponse(req: NextRequest, action: string) {
     const health: Record<string, unknown> = {};
     for (const p of ["VISION", "LLM", "ASR", "HANDWRITING"] as ServiceName[]) {
       try {
-        const tencent =
-          (p === "ASR" || p === "HANDWRITING" || p === "VISION") &&
+        const provider =
           (p === "VISION"
-            ? getAISetting("VISION_PROVIDER") === "tencent"
-            : getAISetting(`${p}_PROVIDER`) === "tencent");
+            ? getAISetting("VISION_PROVIDER")
+            : getAISetting(`${p}_PROVIDER`)) || "openai-compatible";
+        const tencent = p !== "LLM" && provider === "tencent";
         if (tencent) {
           if (!tencentConfigured()) throw new Error("missing");
-        } else config(p);
+        }
+        const cfg = tencent ? null : config(p);
         health[p] = {
           state: "configured",
           label: "已配置，待调用验证",
-          provider: tencent
-            ? "tencent"
-            : getAISetting(`${p}_PROVIDER`) || "xfyun",
+          provider: tencent ? "tencent" : cfg!.provider,
           model: tencent
             ? p === "ASR"
               ? `腾讯一句话识别 · ${getAISetting("TENCENT_ASR_ENGINE")}`
               : p === "VISION"
                 ? "腾讯通用高精度 OCR · 保留版面"
                 : "腾讯通用手写体 OCR"
-            : getAISetting(`${p}_MODEL`),
+            : cfg!.model,
           ...recentService(p),
         };
       } catch {

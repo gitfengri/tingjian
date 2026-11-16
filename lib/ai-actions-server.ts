@@ -4,6 +4,7 @@ import { z } from "zod";
 import { synthesize } from "./tts-server";
 import { chat, config, parseJSON, request, ServiceError } from "./server";
 import { transcribeTencent, recognizeHandwriting } from "./tencent-server";
+import { transcribeBailian } from "./bailian-server";
 import { materializeGrading } from "./handwriting";
 import { readMaterial } from "./ocr-server";
 import { extractMaterial, itemIssue } from "./materials";
@@ -35,7 +36,9 @@ export async function runAIAction(
         image: img,
         source: z.string().max(2000).default("上传图片"),
         mode: z.enum(["auto", "words", "phrases", "sentences"]).default("auto"),
-        provider: z.enum(["tencent", "xfyun"]).optional(),
+        provider: z
+          .enum(["tencent", "bailian", "openai-compatible", "xfyun"])
+          .optional(),
       })
       .parse(b);
     const material = await readMaterial(
@@ -114,6 +117,8 @@ export async function runAIAction(
     const audio = Buffer.from(data.audio, "base64");
     if (getAISetting("ASR_PROVIDER") === "tencent")
       return Response.json(await transcribeTencent(audio, signal));
+    if (getAISetting("ASR_PROVIDER") === "bailian")
+      return Response.json(await transcribeBailian(audio, signal));
     const c = config("ASR");
     const form = new FormData();
     form.set(
