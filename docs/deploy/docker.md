@@ -38,6 +38,38 @@ echo <你的 GitHub PAT，至少 read:packages> | docker login ghcr.io -u <用�
 docker compose build
 ```
 
+### 改用阿里云 ACR（国内服务器推荐，拉取更快）
+
+本机（Windows/macOS）构建好镜像后推到 ACR：
+
+```bash
+docker login registry.cn-shenzhen.aliyuncs.com -u <账号或 用户名@实例名>
+# 包管理版实例/个人版：用户名是阿里云账号全名；企业版：用户名@实例名
+docker tag tingjian:v001 registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
+docker push registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
+```
+
+推送前确认架构与服务器一致（x86 服务器必须是 `linux/amd64`）：
+
+```bash
+docker image inspect tingjian:v001 --format '{{.Os}}/{{.Architecture}}'
+```
+
+服务器上登录并指定镜像启动（`APP_IMAGE` 会覆盖 compose 里的默认镜像名）：
+
+```bash
+docker login registry.cn-shenzhen.aliyuncs.com -u <账号>
+APP_IMAGE=registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001 docker compose up -d
+```
+
+想长期固定这个镜像，把下面一行写进 `.env.local`，之后 `docker compose pull && docker compose up -d` 即可更新：
+
+```bash
+APP_IMAGE=registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
+```
+
+> 同地域 ECS 可把域名换成 `registry-vpc.cn-shenzhen.aliyuncs.com` 走内网，速度更快且不计公网流量。
+
 ## 3. 服务器准备（Ubuntu 22.04/24.04）
 
 ```bash
@@ -90,6 +122,37 @@ ssh -L 3000:127.0.0.1:3000 <user>@<server>
 需要局域网直接访问时，在 `.env.local` 或命令行设置 `BIND_ADDR=0.0.0.0`（仍会受 APP_ACCESS_TOKEN 保护）。
 
 > **从 Windows 迁移 `.env.local` 时注意**：如果里面保留了 `EDGE_TTS_PYTHON=services/edge/.venv/Scripts/python.exe` 或 `FFMPEG_PATH=E:/...` 这类本机路径，容器里是不存在的。`docker-compose.yml` 已经在 `environment:` 里把 `EDGE_TTS_PYTHON=/opt/edge/bin/python`、`FFMPEG_PATH=/usr/bin/ffmpeg`、`BIND_HOST=0.0.0.0` 固定下来（其优先级高于 `env_file`），所以直接 `docker compose up -d` 不会出问题；但如果用 `docker run --env-file .env.local` 手动启动，请记得额外 `-e` 覆盖这三个变量。
+
+### 服务器上没有仓库代码时（只用镜像启动）
+
+镜像已内置 Node、FFmpeg 和 edge-tts，不需要克隆仓库，直接：
+
+```bash
+mkdir -p ~/tingjian && cd ~/tingjian
+cat > .env <<'EOF'
+BAILIAN_API_KEY=sk-...
+BAILIAN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+APP_ACCESS_TOKEN=<至少 24 位随机口令>
+EOF
+chmod 600 .env
+
+docker run -d --name tingjian --restart unless-stopped \
+  -p 127.0.0.1:3000:3000 \
+  --env-file .env \
+  -e EDGE_TTS_PYTHON=/opt/edge/bin/python \
+  -e FFMPEG_PATH=/usr/bin/ffmpeg \
+  -e BIND_HOST=0.0.0.0 \
+  -e MINI_DATABASE_FILE=/app/.local/miniprogram.sqlite \
+  -v tingjian-data:/app/.local \
+  registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
+```
+
+更新镜像时重建容器（数据在 `tingjian-data` 卷里不会丢）：
+
+```bash
+docker pull registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
+docker rm -f tingjian && <上面的 docker run 命令>
+```
 
 ## 5. 绑定域名与 HTTPS
 
