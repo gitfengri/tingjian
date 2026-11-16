@@ -235,8 +235,8 @@ export const aiFields = {
     section: "bailian",
     label: "百炼图片识别模型",
     kind: "text",
-    default: "qwen-vl-ocr-latest",
-    hint: "例如 qwen-vl-ocr-latest、qwen-vl-max-latest；需支持图片输入。",
+    default: "qwen-vl-ocr",
+    hint: "例如 qwen-vl-ocr、qwen-vl-max-latest；需支持图片输入。",
   },
   BAILIAN_ASR_MODEL: {
     section: "bailian",

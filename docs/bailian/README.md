@@ -7,7 +7,7 @@
 | 能力 | 百炼模型 | 接口 |
 | --- | --- | --- |
 | AI 辅助出题、清单整理、讲解、听写对话 | `qwen-plus`（可换 `qwen-max` 等支持工具调用的模型） | OpenAI 兼容 `POST {base}/chat/completions` |
-| 拍照 / 圈选图片识别 | `qwen-vl-ocr-latest`（可换 `qwen-vl-max-latest`） | 同上，`image_url` 传入图片 Data URL |
+| 拍照 / 圈选图片识别 | `qwen-vl-ocr`（可换 `qwen-vl-max-latest`） | 同上，`image_url` 传入图片 Data URL |
 | 麦克风语音识别 | `qwen3-asr-flash` | 同上，`input_audio` 传入音频 Data URL |
 | 手写批改 | 腾讯 `GeneralHandwritingOCR` | 腾讯云 SDK，未改变 |
 
@@ -29,7 +29,7 @@
 BAILIAN_API_KEY=sk-xxx
 BAILIAN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 BAILIAN_LLM_MODEL=qwen-plus
-BAILIAN_VISION_MODEL=qwen-vl-ocr-latest
+BAILIAN_VISION_MODEL=qwen-vl-ocr
 BAILIAN_ASR_MODEL=qwen3-asr-flash
 ```
 

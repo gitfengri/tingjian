@@ -63,7 +63,7 @@ test("a Bailian key selects Bailian for vision and ASR by default", async () => 
     "https://dashscope.aliyuncs.com/compatible-mode/v1",
   );
   assert.equal(values.BAILIAN_LLM_MODEL, "qwen-plus");
-  assert.equal(values.BAILIAN_VISION_MODEL, "qwen-vl-ocr-latest");
+  assert.equal(values.BAILIAN_VISION_MODEL, "qwen-vl-ocr");
   assert.equal(values.BAILIAN_ASR_MODEL, "qwen3-asr-flash");
 });
 
@@ -85,7 +85,7 @@ test("Bailian service config resolves shared key, base URL and model defaults", 
   const vision = config("VISION");
   assert.equal(vision.base, "https://dashscope.aliyuncs.com/compatible-mode/v1");
   assert.equal(vision.key, "sk-bailian-test");
-  assert.equal(vision.model, "qwen-vl-ocr-latest");
+  assert.equal(vision.model, "qwen-vl-ocr");
   assert.equal(vision.provider, "bailian");
   const asr = config("ASR");
   assert.equal(asr.model, "qwen3-asr-flash");
@@ -99,7 +99,7 @@ test("legacy per-service fields never leak into Bailian requests", async () => {
   process.env.VISION_API_KEY = "legacy-key";
   const { config } = await import("../lib/server");
   const vision = config("VISION");
-  assert.equal(vision.model, "qwen-vl-ocr-latest");
+  assert.equal(vision.model, "qwen-vl-ocr");
   assert.equal(
     vision.base,
     "https://dashscope.aliyuncs.com/compatible-mode/v1",
