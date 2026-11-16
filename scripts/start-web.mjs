@@ -5,7 +5,12 @@ try {
   loadEnvFile(".env.local");
 } catch {}
 const command = process.argv[2] === "start" ? "start" : "dev";
-const host = process.env.APP_ACCESS_TOKEN ? "0.0.0.0" : "127.0.0.1";
+// BIND_HOST wins when set: containers must listen on 0.0.0.0 even without a
+// token, otherwise the published port cannot reach the process. Host exposure
+// is still controlled by the token check and by docker-compose's bind address.
+const host =
+  process.env.BIND_HOST ||
+  (process.env.APP_ACCESS_TOKEN ? "0.0.0.0" : "127.0.0.1");
 const child = spawn(
   process.execPath,
   [

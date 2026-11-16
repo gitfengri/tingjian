@@ -89,6 +89,8 @@ ssh -L 3000:127.0.0.1:3000 <user>@<server>
 
 需要局域网直接访问时，在 `.env.local` 或命令行设置 `BIND_ADDR=0.0.0.0`（仍会受 APP_ACCESS_TOKEN 保护）。
 
+> **从 Windows 迁移 `.env.local` 时注意**：如果里面保留了 `EDGE_TTS_PYTHON=services/edge/.venv/Scripts/python.exe` 或 `FFMPEG_PATH=E:/...` 这类本机路径，容器里是不存在的。`docker-compose.yml` 已经在 `environment:` 里把 `EDGE_TTS_PYTHON=/opt/edge/bin/python`、`FFMPEG_PATH=/usr/bin/ffmpeg`、`BIND_HOST=0.0.0.0` 固定下来（其优先级高于 `env_file`），所以直接 `docker compose up -d` 不会出问题；但如果用 `docker run --env-file .env.local` 手动启动，请记得额外 `-e` 覆盖这三个变量。
+
 ## 5. 绑定域名与 HTTPS
 
 麦克风和部分摄像头接口只在 HTTPS 或 localhost 下可用，手机使用务必配置 HTTPS。
@@ -144,6 +146,7 @@ docker run --rm -v tingjian_study-data:/data -v "$PWD":/backup alpine \
 | 打开页面提示 403 | 用 IP/域名访问但没带口令：在网页里输入 `APP_ACCESS_TOKEN`，或通过 SSH 隧道用 localhost |
 | 语音识别报“需要 FFmpeg” | 镜像已内置，检查是否覆盖了 `FFMPEG_PATH` |
 | 朗读无声或失败 | Edge 在线语音需要容器可访问外网（`dashscope`/微软 TTS 域名） |
+| 容器已启动但浏览器连不上 | 容器内没监听 `0.0.0.0`（未设 `BIND_HOST`）。镜像默认已设为 `0.0.0.0`，若被 `.env.local` 覆盖请删掉该行 |
 | 图片识别失败 | 检查百炼 Key、模型名（`qwen-vl-ocr`）与账号额度 |
 | 手机麦克风不可用 | 未使用 HTTPS：按第 5 节配置域名 |
 | 容器反复重启 | `docker compose logs app` 查看；多为 `.env.local` 缺失 `APP_ACCESS_TOKEN` |

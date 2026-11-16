@@ -13,6 +13,7 @@ FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
+    BIND_HOST=0.0.0.0 \
     EDGE_TTS_PYTHON=/opt/edge/bin/python \
     FFMPEG_PATH=/usr/bin/ffmpeg
 RUN apt-get update \

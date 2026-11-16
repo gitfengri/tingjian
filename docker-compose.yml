@@ -17,6 +17,12 @@ services:
     environment:
       # APP_ACCESS_TOKEN comes from .env.local (env_file above). Any access that
       # is not localhost is rejected without it: use 24+ characters.
+      #
+      # These two override whatever .env.local says, because a .env.local copied
+      # from a Windows machine points at E:/... paths that do not exist here.
+      EDGE_TTS_PYTHON: /opt/edge/bin/python
+      FFMPEG_PATH: /usr/bin/ffmpeg
+      BIND_HOST: 0.0.0.0
       MINI_DATABASE_FILE: /app/.local/miniprogram.sqlite
       MINI_TRUST_PROXY: "1"
     volumes:
@@ -39,7 +45,10 @@ services:
     profiles: ["https"]
     restart: unless-stopped
     environment:
-      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN, e.g. study.example.com}
+      # Only the https profile needs this. Keep the default empty so that a plain
+      # `docker compose up -d` still works: compose interpolates every service
+      # even when the profile is off, and `:?` would abort the whole command.
+      APP_DOMAIN: ${APP_DOMAIN:-}
     ports:
       - "80:80"
       - "443:443"
