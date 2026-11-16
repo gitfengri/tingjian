@@ -1,5 +1,6 @@
 import "server-only";
 import { ffmpegAudio } from "./audio-server";
+import type { RecognizedLine } from "./handwriting";
 import type { ContentMode } from "./materials";
 import { recordService } from "./service-health";
 import { config, ServiceError } from "./server";
@@ -95,13 +96,15 @@ function visionPrompt(mode: ContentMode) {
   return `${base}若内容是词语表或表格，每行只输出一个词语；若内容是文章或句子，按自然段与换行原样输出。`;
 }
 
-/** Printed-word recognition through the Bailian vision model. */
-export async function recognizeBailian(
+/** Shared vision call: image in, plain text out, per-service config. */
+async function visionText(
+  prefix: "VISION" | "HANDWRITING",
   image: string,
-  mode: ContentMode,
+  prompt: string,
   signal: AbortSignal,
+  label: string,
 ) {
-  const c = config("VISION");
+  const c = config(prefix);
   const data = await postJSON(
     `${c.base}/chat/completions`,
     c.key,
@@ -111,7 +114,7 @@ export async function recognizeBailian(
         {
           role: "user",
           content: [
-            { type: "text", text: visionPrompt(mode) },
+            { type: "text", text: prompt },
             { type: "image_url", image_url: { url: image } },
           ],
         },
@@ -143,8 +146,42 @@ export async function recognizeBailian(
         : "";
   if (!text.trim())
     throw new ServiceError(502, "百炼没有识别到文字，请调整选区或重新拍摄");
-  recordService("VISION", true, "阿里云百炼图片识别 · 最近调用成功");
+  recordService(prefix, true, label);
   return text.trim();
+}
+
+/** Printed-word recognition through the Bailian vision model. */
+export async function recognizeBailian(
+  image: string,
+  mode: ContentMode,
+  signal: AbortSignal,
+) {
+  return visionText(
+    "VISION",
+    image,
+    visionPrompt(mode),
+    signal,
+    "阿里云百炼图片识别 · 最近调用成功",
+  );
+}
+
+/** Handwriting transcription: one line per written row, verbatim. */
+export async function recognizeHandwritingBailian(
+  image: string,
+  signal: AbortSignal,
+): Promise<RecognizedLine[]> {
+  const text = await visionText(
+    "HANDWRITING",
+    image,
+    "识别这张图片里的手写文字。按书写行逐行输出，每行只输出该行识别到的文字；保留行首题号（如有）；保持原有错别字和书写顺序，不要纠正、不要补全、不要解释，不要输出 Markdown。",
+    signal,
+    "阿里云百炼手写识别 · 最近调用成功",
+  );
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, id) => ({ id, text: line }));
 }
 
 /** Qwen-ASR through the OpenAI-compatible chat/completions input_audio part. */

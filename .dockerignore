@@ -11,3 +11,10 @@ services/**/__pycache__
 services/tts/cache
 *.tsbuildinfo
 project.private.config.json
+.git
+.github
+.tools
+data
+audio
+.venv
+*.log

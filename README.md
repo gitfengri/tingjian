@@ -162,6 +162,16 @@ OCR 保留原始文本和用户提供的默认提示词，未伪造置信度。S
 
 ## 手机与部署
 
+Docker 部署（推荐，含 GitHub Actions 自动构建镜像）：
+
+```bash
+cp .env.example .env.local     # 填写 BAILIAN_API_KEY 与 APP_ACCESS_TOKEN
+docker compose up -d --build
+# 域名 + 自动 HTTPS：APP_DOMAIN=study.example.com docker compose --profile https up -d
+```
+
+镜像内含 Node.js、FFmpeg 与 edge-tts，服务器无需单独安装环境。完整步骤、GHCR 登录、备份与排错见 [docs/deploy/docker.md](docs/deploy/docker.md)。
+
 启动脚本在 `APP_ACCESS_TOKEN` 为空时只监听 127.0.0.1；设置强口令后才监听 0.0.0.0。手机访问前必须设置口令，在网页服务设置中输入。同源保护、17 MB 请求体上限、每分钟 100 次的单进程全局限流、最多 8 个并发请求和 TTS 队列限制保护模型代理。公网部署建议再加反向代理认证、按账号/租户计费及共享限流；当前交付适合个人/家庭单进程，不是多租户服务。
 
 手机通过同一网络上的电脑域名访问网页，**不能访问手机自身的 127.0.0.1**。选择本地朗读时，网页后端连接电脑的 127.0.0.1:8765；选择 Edge 时由网页后端联网生成。生产需反向代理 HTTPS（Caddy、Nginx 或受信任的内网证书），保持 Host 头；麦克风与部分摄像头 API 在普通 LAN HTTP 下不可用。不要把 8765 映射到公网。关闭浏览器权限会得到说明，并可继续按钮操作。

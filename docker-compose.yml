@@ -1,0 +1,56 @@
+# Usage:
+#   1) cp .env.example .env.local, fill BAILIAN_API_KEY and APP_ACCESS_TOKEN
+#   2) docker compose up -d --build           # build locally
+#      docker compose pull && docker compose up -d   # use the GHCR image
+#
+# Access: http://127.0.0.1:3000 (SSH tunnel) or through the optional Caddy
+# HTTPS profile: docker compose --profile https up -d
+services:
+  app:
+    image: ${APP_IMAGE:-ghcr.io/your-name/tingjian:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    environment:
+      # APP_ACCESS_TOKEN comes from .env.local (env_file above). Any access that
+      # is not localhost is rejected without it: use 24+ characters.
+      MINI_DATABASE_FILE: /app/.local/miniprogram.sqlite
+      MINI_TRUST_PROXY: "1"
+    volumes:
+      # AI settings overrides, drafts and the mini-program database.
+      - study-data:/app/.local
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:3000:3000"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "const h=process.env.APP_ACCESS_TOKEN?{authorization:'Bearer '+process.env.APP_ACCESS_TOKEN}:{};fetch('http://127.0.0.1:3000/api/health',{headers:h}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  https:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN, e.g. study.example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  study-data:
+  caddy-data:
+  caddy-config:

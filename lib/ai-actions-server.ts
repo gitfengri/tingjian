@@ -4,7 +4,7 @@ import { z } from "zod";
 import { synthesize } from "./tts-server";
 import { chat, config, parseJSON, request, ServiceError } from "./server";
 import { transcribeTencent, recognizeHandwriting } from "./tencent-server";
-import { transcribeBailian } from "./bailian-server";
+import { transcribeBailian, recognizeHandwritingBailian } from "./bailian-server";
 import { materializeGrading } from "./handwriting";
 import { readMaterial } from "./ocr-server";
 import { extractMaterial, itemIssue } from "./materials";
@@ -265,8 +265,12 @@ export async function runAIAction(
     const data = z
       .object({ image: img, answers: z.array(z.string().max(1000)).max(300) })
       .parse(b);
-    if (getAISetting("HANDWRITING_PROVIDER") === "tencent") {
-      const lines = await recognizeHandwriting(data.image, signal);
+    const handwriting = getAISetting("HANDWRITING_PROVIDER");
+    if (handwriting === "tencent" || handwriting === "bailian") {
+      const lines =
+        handwriting === "tencent"
+          ? await recognizeHandwriting(data.image, signal)
+          : await recognizeHandwritingBailian(data.image, signal);
       if (!lines.length)
         return Response.json({
           results: materializeGrading([], [], data.answers.length),

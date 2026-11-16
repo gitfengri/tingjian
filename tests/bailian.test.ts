@@ -57,6 +57,7 @@ test("a Bailian key selects Bailian for vision and ASR by default", async () => 
   });
   assert.equal(values.VISION_PROVIDER, "bailian");
   assert.equal(values.ASR_PROVIDER, "bailian");
+  assert.equal(values.HANDWRITING_PROVIDER, "bailian");
   assert.equal(values.LLM_PROVIDER, "bailian");
   assert.equal(
     values.BAILIAN_BASE_URL,
@@ -65,6 +66,7 @@ test("a Bailian key selects Bailian for vision and ASR by default", async () => 
   assert.equal(values.BAILIAN_LLM_MODEL, "qwen-plus");
   assert.equal(values.BAILIAN_VISION_MODEL, "qwen-vl-ocr");
   assert.equal(values.BAILIAN_ASR_MODEL, "qwen3-asr-flash");
+  assert.equal(values.BAILIAN_HANDWRITING_MODEL, "qwen-vl-ocr");
 });
 
 test("Tencent credentials still win over Bailian defaults", async () => {

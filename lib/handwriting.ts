@@ -73,7 +73,7 @@ export function materializeGrading(
       readable: valid && !low,
       aligned: valid && !ambiguous && m.certain,
       reason: low
-        ? "腾讯返回的识别置信度低于复核阈值 80，请对照图片确认"
+        ? "识别置信度低于复核阈值 80，请对照图片确认"
         : ambiguous
           ? "文字缺失、重复匹配或来源不明确，请人工核查"
           : m.reason,

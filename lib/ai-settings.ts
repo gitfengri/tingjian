@@ -28,7 +28,7 @@ export const aiSections = [
     id: "bailian",
     title: "阿里云百炼",
     description:
-      "对话、图片识别和语音识别可共用这组百炼配置；各分类选择了“阿里云百炼”时，未单独填写地址、密钥或模型则使用这里的值。",
+      "对话、图片识别、语音识别和手写批改可共用这组百炼配置；各分类选择了“阿里云百炼”时，使用这里的地址、密钥与模型。",
   },
   {
     id: "asr",
@@ -39,7 +39,7 @@ export const aiSections = [
     id: "handwriting",
     title: "手写批改",
     description:
-      "负责识别手写原文。与标准答案的对齐使用上方对话模型，最终结果仍需核查。",
+      "识别手写原文。可选阿里云百炼 Qwen 视觉模型或腾讯手写 OCR；与标准答案的对齐使用上方对话模型，最终结果仍需核查。",
   },
   {
     id: "runtime",
@@ -245,6 +245,13 @@ export const aiFields = {
     default: "qwen3-asr-flash",
     hint: "使用 OpenAI 兼容 chat/completions 的 input_audio 输入。",
   },
+  BAILIAN_HANDWRITING_MODEL: {
+    section: "bailian",
+    label: "百炼手写识别模型",
+    kind: "text",
+    default: "qwen-vl-ocr",
+    hint: "识别手写原文并逐行输出，再由对话模型与标准答案对齐；例如 qwen-vl-ocr、qwen3-vl-plus。",
+  },
   EDGE_TTS_PYTHON: {
     section: "runtime",
     label: "Edge TTS Python 路径",
@@ -366,6 +373,8 @@ export function inheritedAIValues(
   const tencentReady = result.TENCENT_SECRET_ID && result.TENCENT_SECRET_KEY;
   if (!environment.ASR_PROVIDER && result.BAILIAN_API_KEY && !tencentReady)
     result.ASR_PROVIDER = "bailian";
+  if (!environment.HANDWRITING_PROVIDER && result.BAILIAN_API_KEY && !tencentReady)
+    result.HANDWRITING_PROVIDER = "bailian";
   if (
     !environment.LLM_PROVIDER &&
     result.BAILIAN_API_KEY &&

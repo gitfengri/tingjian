@@ -9,7 +9,7 @@
 | AI 辅助出题、清单整理、讲解、听写对话 | `qwen-plus`（可换 `qwen-max` 等支持工具调用的模型） | OpenAI 兼容 `POST {base}/chat/completions` |
 | 拍照 / 圈选图片识别 | `qwen-vl-ocr`（可换 `qwen-vl-max-latest`） | 同上，`image_url` 传入图片 Data URL |
 | 麦克风语音识别 | `qwen3-asr-flash` | 同上，`input_audio` 传入音频 Data URL |
-| 手写批改 | 腾讯 `GeneralHandwritingOCR` | 腾讯云 SDK，未改变 |
+| 手写批改 | `qwen-vl-ocr`（可在「阿里云百炼」分组改模型） | 先逐行识别手写原文，再由对话模型与标准答案对齐 |
 
 `base` 默认是 `https://dashscope.aliyuncs.com/compatible-mode/v1`。若使用业务空间专属域名，可改为
 `https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1`。
@@ -40,7 +40,8 @@ BAILIAN_ASR_MODEL=qwen3-asr-flash
 - **视觉识别不返回文字坐标**：只能按行输出，无法可靠恢复词表列。页面会给出提示，词表场景建议改用腾讯版面识别。
   本分支让百炼识别按内容模式输出：词语表每行一个词、短语每行一个短语、句子每行一句，以减少后续手工拆分。
 - **语音识别的音频会先用 FFmpeg 转成 16 kHz 单声道 MP3**（最长 12 秒，Base64 后不超过 10 MB），再提交给 Qwen-ASR。
-- **手写批改仍需要腾讯云凭据**；未配置时该功能显示“未配置”，不影响听写与朗读。
+- **手写批改**默认与图片识别同源：`qwen-vl-ocr` 逐行输出手写原文（保留错别字，不修正），再由对话模型把文本行与标准答案对齐；
+  百炼不返回置信度，因此没有“置信度低于 80”的复核提示，全部结果仍需人工确认。仍可在设置里切回腾讯手写识别（需腾讯云凭据）。
 - 朗读默认仍是 Edge 在线语音，未改变。
 
 ## 验证
