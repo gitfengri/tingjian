@@ -1,10 +1,17 @@
 # Usage:
 #   1) cp .env.example .env.local, fill BAILIAN_API_KEY and APP_ACCESS_TOKEN
-#   2) docker compose up -d --build           # build locally
-#      docker compose pull && docker compose up -d   # use the GHCR image
+#   2) docker compose --env-file .env.local pull app    # pull a prebuilt image
+#      docker compose --env-file .env.local up -d
+#      docker compose --env-file .env.local up -d --build   # or build locally
+#
+# NOTE ON VARIABLES: `env_file:` only injects variables INTO THE CONTAINER.
+# Compose resolves ${APP_IMAGE} / ${APP_DOMAIN} while parsing this file, and it
+# only looks at the shell environment, `.env`, or `--env-file`. That is why the
+# commands above pass `--env-file .env.local`; without it those values are empty
+# and `pull` reports "No image to be pulled".
 #
 # Access: http://127.0.0.1:3000 (SSH tunnel) or through the optional Caddy
-# HTTPS profile: docker compose --profile https up -d
+# HTTPS profile: docker compose --env-file .env.local --profile https up -d
 services:
   app:
     image: ${APP_IMAGE:-ghcr.io/your-name/tingjian:latest}

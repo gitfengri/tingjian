@@ -62,7 +62,7 @@ docker login registry.cn-shenzhen.aliyuncs.com -u <账号>
 APP_IMAGE=registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001 docker compose up -d
 ```
 
-想长期固定这个镜像，把下面一行写进 `.env.local`，之后 `docker compose pull && docker compose up -d` 即可更新：
+想长期固定这个镜像，把下面一行写进 `.env.local`（或 `.env`），之后 `docker compose --env-file .env.local pull app && docker compose --env-file .env.local up -d` 即可更新：
 
 ```bash
 APP_IMAGE=registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001
@@ -100,11 +100,14 @@ APP_ACCESS_TOKEN=<至少 24 位的随机口令>
 启动：
 
 ```bash
-docker compose pull
-docker compose up -d
-docker compose ps
-docker compose logs -f app
+docker compose --env-file .env.local pull app
+docker compose --env-file .env.local up -d
+docker compose --env-file .env.local ps
+docker compose --env-file .env.local logs -f app
 ```
+
+> **为什么要带 `--env-file .env.local`**：`env_file:` 只把变量注入容器，Compose 解析 `${APP_IMAGE}`、`${APP_DOMAIN}` 时不会读 `.env.local`，只读 shell 环境、`.env` 或 `--env-file` 指定的文件。不带这个参数时会看到 `The "APP_IMAGE" variable is not set`，`pull` 也会提示 `No image to be pulled`。
+> 不想每条命令都带参数，就另建一个 `.env`（已被 `.gitignore` 忽略）：里面只放 `APP_IMAGE=` 和 `APP_DOMAIN=`，密钥仍留在 `.env.local`。
 
 验证：
 
@@ -164,7 +167,7 @@ APP_DOMAIN=study.example.com
 ```
 
 ```bash
-docker compose --profile https up -d
+docker compose --env-file .env.local --profile https up -d
 ```
 
 Caddy 会自动申请证书并反代到 `app:3000`，请求体上限 17MB（与图片上传限制一致）。域名需先解析到服务器公网 IP，并放行 80/443。
@@ -175,15 +178,15 @@ Caddy 会自动申请证书并反代到 `app:3000`，请求体上限 17MB（与�
 
 ```bash
 git pull
-docker compose pull
-docker compose up -d
+docker compose --env-file .env.local pull app
+docker compose --env-file .env.local up -d
 ```
 
 回滚到某个提交的镜像：
 
 ```bash
-docker compose down
-APP_IMAGE=ghcr.io/<用户名>/<仓库>:sha-abc1234 docker compose up -d
+APP_IMAGE=registry.cn-shenzhen.aliyuncs.com/codelabclub/tingjian:v001 \
+  docker compose --env-file .env.local up -d --force-recreate
 ```
 
 ## 7. 数据与备份
