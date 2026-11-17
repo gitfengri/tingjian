@@ -16,10 +16,12 @@ import {
 import {
   aiFields,
   aiKeys,
+  aiSaveSchema,
   aiSections,
   differentOrigin,
   endpointSecrets,
-  aiSaveSchema,
+  visibleAIKeys,
+  visibleAISections,
   type AIKey,
   type AIPatch,
   type AISection,
@@ -186,7 +188,9 @@ export default function AISettings({
     }
   }
   const currentSection = aiSections.find((item) => item.id === section)!;
-  const sectionKeys = aiKeys.filter((key) => aiFields[key].section === section);
+  const sectionKeys = visibleAIKeys.filter(
+    (key) => aiFields[key].section === section,
+  );
   if (loading && !saved)
     return (
       <section className="panel ai-settings-loading" role="status">
@@ -219,7 +223,7 @@ export default function AISettings({
         <>
           <div className="ai-settings-layout">
             <nav className="ai-settings-nav" aria-label="AI 配置分类">
-              {aiSections.map((item) => (
+              {visibleAISections.map((item) => (
                 <button
                   type="button"
                   key={item.id}

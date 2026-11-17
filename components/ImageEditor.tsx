@@ -33,12 +33,7 @@ export default function ImageEditor({
     [busy, setBusy] = useState(false),
     [past, setPast] = useState<Picture[][]>([]),
     [future, setFuture] = useState<Picture[][]>([]),
-    [contentMode, setContentMode] = useState<ContentMode>("auto"),
-    [provider, setProvider] = useState<
-      "default" | "tencent" | "bailian" | "openai-compatible"
-    >(
-      "default",
-    );
+    [contentMode, setContentMode] = useState<ContentMode>("auto");
   const svg = useRef<SVGSVGElement>(null);
   const scrollBox = useRef<HTMLDivElement>(null);
   const pan = useRef<{
@@ -207,7 +202,7 @@ export default function ImageEditor({
               image: data,
               source,
               mode: contentMode,
-              provider: provider === "default" ? undefined : provider,
+              provider: "bailian",
             },
             c.signal,
           );
@@ -253,22 +248,8 @@ export default function ImageEditor({
             <option value="sentences">句子 · 每句一项</option>
           </select>
         </label>
-        <label>
-          识别服务
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as typeof provider)}
-          >
-            <option value="default">使用网页中配置的默认服务</option>
-            <option value="tencent">腾讯高精度 · 保留文字位置</option>
-            <option value="bailian">阿里云百炼 · Qwen 视觉模型</option>
-            <option value="openai-compatible">
-              其他兼容接口 · 图片识别模型
-            </option>
-          </select>
-        </label>
         <p className="note">
-          词表需要列位置，推荐腾讯版面识别。识别文本会保留以便核查。
+          使用阿里云百炼视觉模型识别图片文字，按词表/短语/句子逐行输出。
         </p>
         <div className="toolbar">
           <button onClick={() => input.current?.click()}>

@@ -26,6 +26,7 @@ const configuration = {
   VISION_BASE_URL: "https://vision.test/v1",
   VISION_API_KEY: "test-key",
   VISION_MODEL: "test-vision",
+  VISION_PROVIDER: "openai-compatible",
   LLM_REASONING_EFFORT: "none",
 };
 const previous = Object.fromEntries(

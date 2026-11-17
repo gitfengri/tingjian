@@ -5,41 +5,39 @@ export const aiSections = [
     id: "llm",
     title: "对话与 Agent",
     description:
-      "清单整理、听写对话、讲解和答案对齐共用此模型。模型需支持工具调用；不设置输出 token 上限或推理强度。",
+      "清单整理、听写对话、讲解和答案对齐统一使用「阿里云百炼」分组的对话模型。模型需支持工具调用。",
   },
   {
     id: "vision",
     title: "图片文字识别",
-    description:
-      "腾讯高精度识别保留词表行列；兼容接口用于图片转文字。图片页可临时选择另一服务。",
+    description: "此服务已统一使用阿里云百炼，请在「阿里云百炼」分组配置。",
   },
   {
     id: "tts",
     title: "语音朗读",
     description:
-      "选择默认朗读服务。声音、语速和重复次数仍可在每次听写的设置中调整。",
+      "默认使用 Edge 在线语音，无需密钥。声音、语速和重复次数仍可在每次听写的设置中调整。",
   },
   {
     id: "tencent",
     title: "腾讯云凭据",
-    description: "图片识别、腾讯语音识别和腾讯手写识别共用这组凭据。",
+    description: "此服务已停用，所有能力统一使用阿里云百炼。",
   },
   {
     id: "bailian",
     title: "阿里云百炼",
     description:
-      "对话、图片识别、语音识别和手写批改可共用这组百炼配置；各分类选择了“阿里云百炼”时，使用这里的地址、密钥与模型。",
+      "对话、图片识别、语音识别和手写批改全部使用这组百炼配置；只需填写 API Key，模型保持默认即可。",
   },
   {
     id: "asr",
     title: "语音识别",
-    description: "把麦克风录音转写成文字，再交给听写 Agent 理解。",
+    description: "此服务已统一使用阿里云百炼，请在「阿里云百炼」分组配置。",
   },
   {
     id: "handwriting",
     title: "手写批改",
-    description:
-      "识别手写原文。可选阿里云百炼 Qwen 视觉模型或腾讯手写 OCR；与标准答案的对齐使用上方对话模型，最终结果仍需核查。",
+    description: "此服务已统一使用阿里云百炼，请在「阿里云百炼」分组配置。",
   },
   {
     id: "runtime",
@@ -56,38 +54,37 @@ type Field = {
   default?: string;
   options?: readonly (readonly [string, string])[];
   hint?: string;
+  /** Kept for server-side reads but never rendered in the settings UI. */
+  hidden?: boolean;
 };
-const compatible = [["openai-compatible", "OpenAI 兼容接口"]] as const;
-const cloudOptions = [
-  ["tencent", "腾讯云"],
-  ["bailian", "阿里云百炼（DashScope）"],
-  ...compatible,
-] as const;
-const chatOptions = [
-  ...compatible,
-  ["bailian", "阿里云百炼（DashScope）"],
-] as const;
+const bailianOnly = [["bailian", "阿里云百炼（DashScope）"]] as const;
 export const aiFields = {
   LLM_PROVIDER: {
     section: "llm",
     label: "接口协议",
     kind: "select",
-    default: "openai-compatible",
-    options: chatOptions,
+    default: "bailian",
+    options: bailianOnly,
+    hidden: true,
   },
   LLM_BASE_URL: {
     section: "llm",
     label: "服务地址（Base URL）",
     kind: "url",
-    hint: "例如 https://token.sensenova.cn/v1，不含 /chat/completions。选择阿里云百炼时改用「阿里云百炼」分组的地址与模型。",
+    hidden: true,
   },
   LLM_MODEL: {
     section: "llm",
     label: "模型名称",
     kind: "text",
-    hint: "填写供应商的完整模型 ID。",
+    hidden: true,
   },
-  LLM_API_KEY: { section: "llm", label: "API Key", kind: "secret" },
+  LLM_API_KEY: {
+    section: "llm",
+    label: "API Key",
+    kind: "secret",
+    hidden: true,
+  },
   LLM_TOOL_CHOICE: {
     section: "llm",
     label: "工具选择策略",
@@ -103,25 +100,34 @@ export const aiFields = {
     section: "vision",
     label: "默认识别服务",
     kind: "select",
-    options: cloudOptions,
+    default: "bailian",
+    options: bailianOnly,
+    hidden: true,
   },
   VISION_BASE_URL: {
     section: "vision",
     label: "兼容接口地址",
     kind: "url",
-    hint: "仅“其他兼容接口”使用；选择腾讯或阿里云百炼时忽略本组地址与密钥。",
+    hidden: true,
   },
-  VISION_MODEL: { section: "vision", label: "图片识别模型", kind: "text" },
+  VISION_MODEL: {
+    section: "vision",
+    label: "图片识别模型",
+    kind: "text",
+    hidden: true,
+  },
   VISION_API_KEY: {
     section: "vision",
     label: "图片识别 API Key",
     kind: "secret",
+    hidden: true,
   },
   TTS_BACKEND: {
     section: "tts",
     label: "默认朗读服务",
     kind: "select",
     default: "edge-tts",
+    hidden: true,
     options: [
       ["edge-tts", "Edge 在线语音"],
       ["mlx-audio", "本地 MLX / Qwen3-TTS"],
@@ -131,13 +137,14 @@ export const aiFields = {
     section: "tts",
     label: "本地语音服务地址",
     kind: "url",
-    hint: "例如 http://127.0.0.1:8765。保存地址不会启动或下载模型。",
+    hidden: true,
   },
   TTS_API_STYLE: {
     section: "tts",
     label: "本地服务接口类型",
     kind: "select",
     default: "mlx-openai",
+    hidden: true,
     options: [
       ["mlx-openai", "MLX-Audio 官方接口"],
       ["project-wrapper", "项目 FastAPI 包装服务"],
@@ -147,70 +154,91 @@ export const aiFields = {
     section: "tts",
     label: "本地模型 ID",
     kind: "text",
-    hint: "需与本地服务已加载的模型一致。模型大小和量化规格由 ID 决定。",
+    hidden: true,
   },
   TTS_SERVICE_TOKEN: {
     section: "tts",
     label: "本地服务访问令牌",
     kind: "secret",
+    hidden: true,
   },
-  TENCENT_SECRET_ID: { section: "tencent", label: "SecretId", kind: "secret" },
+  TENCENT_SECRET_ID: {
+    section: "tencent",
+    label: "SecretId",
+    kind: "secret",
+    hidden: true,
+  },
   TENCENT_SECRET_KEY: {
     section: "tencent",
     label: "SecretKey",
     kind: "secret",
+    hidden: true,
   },
   TENCENT_REGION: {
     section: "tencent",
     label: "地域",
     kind: "text",
     default: "ap-guangzhou",
-    hint: "例如 ap-guangzhou，按已开通服务填写。",
+    hidden: true,
   },
   TENCENT_ASR_ENGINE: {
     section: "asr",
     label: "腾讯一句话识别引擎",
     kind: "text",
     default: "16k_zh",
-    hint: "填写腾讯支持的引擎名，例如普通中文 16k_zh。",
+    hidden: true,
   },
   ASR_PROVIDER: {
     section: "asr",
     label: "语音识别服务",
     kind: "select",
-    default: "tencent",
-    options: cloudOptions,
+    default: "bailian",
+    options: bailianOnly,
+    hidden: true,
   },
   ASR_BASE_URL: {
     section: "asr",
     label: "兼容接口地址",
     kind: "url",
-    hint: "仅“其他兼容接口”使用，需支持 /audio/transcriptions；选择腾讯或阿里云百炼时忽略。",
+    hidden: true,
   },
-  ASR_MODEL: { section: "asr", label: "语音识别模型", kind: "text" },
-  ASR_API_KEY: { section: "asr", label: "语音识别 API Key", kind: "secret" },
+  ASR_MODEL: {
+    section: "asr",
+    label: "语音识别模型",
+    kind: "text",
+    hidden: true,
+  },
+  ASR_API_KEY: {
+    section: "asr",
+    label: "语音识别 API Key",
+    kind: "secret",
+    hidden: true,
+  },
   HANDWRITING_PROVIDER: {
     section: "handwriting",
     label: "手写识别服务",
     kind: "select",
-    default: "tencent",
-    options: cloudOptions,
+    default: "bailian",
+    options: bailianOnly,
+    hidden: true,
   },
   HANDWRITING_BASE_URL: {
     section: "handwriting",
     label: "兼容接口地址",
     kind: "url",
-    hint: "兼容接口需支持图片输入与 JSON 输出。",
+    hidden: true,
   },
   HANDWRITING_MODEL: {
     section: "handwriting",
     label: "手写识别模型",
     kind: "text",
+    hidden: true,
   },
   HANDWRITING_API_KEY: {
     section: "handwriting",
     label: "手写识别 API Key",
     kind: "secret",
+    hidden: true,
   },
   BAILIAN_API_KEY: {
     section: "bailian",
@@ -363,23 +391,13 @@ export function inheritedAIValues(
       environment[key]?.trim() || (aiFields[key] as Field).default || "",
     ]),
   ) as AIValues;
-  if (!result.VISION_PROVIDER)
-    result.VISION_PROVIDER =
-      result.TENCENT_SECRET_ID && result.TENCENT_SECRET_KEY
-        ? "tencent"
-        : result.BAILIAN_API_KEY
-          ? "bailian"
-          : "openai-compatible";
-  const tencentReady = result.TENCENT_SECRET_ID && result.TENCENT_SECRET_KEY;
-  if (!environment.ASR_PROVIDER && result.BAILIAN_API_KEY && !tencentReady)
-    result.ASR_PROVIDER = "bailian";
-  if (!environment.HANDWRITING_PROVIDER && result.BAILIAN_API_KEY && !tencentReady)
-    result.HANDWRITING_PROVIDER = "bailian";
-  if (
-    !environment.LLM_PROVIDER &&
-    result.BAILIAN_API_KEY &&
-    !result.LLM_BASE_URL
-  )
-    result.LLM_PROVIDER = "bailian";
   return result;
 }
+
+const isHiddenKey = (key: AIKey) => Boolean((aiFields[key] as Field).hidden);
+/** Keys the settings UI renders; hidden legacy providers are excluded. */
+export const visibleAIKeys = aiKeys.filter((key) => !isHiddenKey(key));
+/** Sections that still contain at least one visible field. */
+export const visibleAISections = aiSections.filter((item) =>
+  visibleAIKeys.some((key) => aiFields[key].section === item.id),
+);

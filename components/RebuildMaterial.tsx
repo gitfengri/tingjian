@@ -55,7 +55,7 @@ export default function RebuildMaterial({
           image: pic.url,
           source: `${pic.name} / 重新识别原图`,
           mode,
-          provider: "tencent",
+          provider: "bailian",
         },
         controller.signal,
       );

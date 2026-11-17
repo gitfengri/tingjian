@@ -69,15 +69,21 @@ test("a Bailian key selects Bailian for vision and ASR by default", async () => 
   assert.equal(values.BAILIAN_HANDWRITING_MODEL, "qwen-vl-ocr");
 });
 
-test("Tencent credentials still win over Bailian defaults", async () => {
+test("providers default to Bailian and environment overrides still win", async () => {
   const { inheritedAIValues } = await import("../lib/ai-settings");
-  const values = inheritedAIValues({
+  const defaults = inheritedAIValues({
     BAILIAN_API_KEY: "sk-bailian-test",
     TENCENT_SECRET_ID: "id",
     TENCENT_SECRET_KEY: "key",
   });
-  assert.equal(values.VISION_PROVIDER, "tencent");
-  assert.equal(values.ASR_PROVIDER, "tencent");
+  assert.equal(defaults.VISION_PROVIDER, "bailian");
+  assert.equal(defaults.ASR_PROVIDER, "bailian");
+  const overridden = inheritedAIValues({
+    VISION_PROVIDER: "tencent",
+    ASR_PROVIDER: "tencent",
+  });
+  assert.equal(overridden.VISION_PROVIDER, "tencent");
+  assert.equal(overridden.ASR_PROVIDER, "tencent");
 });
 
 test("Bailian service config resolves shared key, base URL and model defaults", async () => {
