@@ -3,7 +3,10 @@ import { ffmpegAudio } from "./audio-server";
 import type { RecognizedLine } from "./handwriting";
 import type { ContentMode } from "./materials";
 import { recordService } from "./service-health";
-import { config, ServiceError } from "./server";
+import {
+  bailianConfig,
+  ServiceError,
+} from "./server";
 
 /**
  * Alibaba Cloud Model Studio (百炼 / DashScope) adapters.
@@ -104,7 +107,9 @@ async function visionText(
   signal: AbortSignal,
   label: string,
 ) {
-  const c = config(prefix);
+  // Explicit bailian path: always use the Bailian config group, never the
+  // legacy per-service provider switch in the environment.
+  const c = bailianConfig(prefix);
   const data = await postJSON(
     `${c.base}/chat/completions`,
     c.key,
@@ -189,7 +194,7 @@ export async function transcribeBailian(
   audio: Buffer,
   signal: AbortSignal,
 ) {
-  const c = config("ASR");
+  const c = bailianConfig("ASR");
   try {
     const mp3 = await ffmpegAudio(
       audio,
